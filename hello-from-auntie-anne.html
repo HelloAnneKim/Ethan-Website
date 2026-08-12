@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>A secret message for Ethan</title>
+
+<style>
+  body {
+    background: lightpink;
+    color: black;
+    font-family: Verdana, sans-serif;
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* The secret message, made of pigpen symbols */
+  #message {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 6px 4px;
+  }
+  #message svg { display: block; }
+  .space { width: 20px; }             /* a gap between words */
+  .punct { font-size: 28px; font-weight: bold; }
+
+  /* The decoder key */
+  #key {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+  }
+  .cell {
+    text-align: center;
+  }
+  .cell .letter { font-size: 20px; font-weight: bold; }
+
+  button {
+    font-size: 18px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  #answer {
+    background: gold;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Hello from Auntie Anne! 💌</h1>
+
+<p>
+  Hi Ethan! I hid a secret message for you using the <b>pigpen cipher</b>.
+  Every little symbol below is one letter. Use the <b>key</b> at the bottom
+  to figure out what it says. You got this!
+</p>
+
+<h2>The secret message</h2>
+<div id="message"></div>
+
+<p>
+  only click if you're sure you're done!
+  <button id="revealBtn" type="button">I did it! Show me the answer</button>
+</p>
+<div id="answer" style="display:none;"></div>
+
+<h2>The decoder key</h2>
+<p>Each symbol stands for a letter. Match them up!</p>
+<div id="key"></div>
+
+<hr>
+<p><a href="index.html">← Back to Ethan's website</a></p>
+<p>Made with <3 by Auntie Anne</p>
+
+<script>
+// ---- Build the pigpen symbol for every letter ------------------------------
+// Letters A–R live in two tic-tac-toe grids (the second half get a dot).
+// Letters S–Z live in two X shapes (the second half get a dot).
+// We draw both the message AND the key with this same function, so the
+// symbols always match the key perfectly.
+
+var symbols = {};
+
+// The 9 tic-tac-toe "pockets", in order A,B,C,D,E,F,G,H,I
+var ticSegments = [
+  [[10,0,10,10],[0,10,10,10]],            // A  top-left corner
+  [[10,0,10,10],[20,0,20,10],[10,10,20,10]], // B  U opening up
+  [[20,0,20,10],[20,10,30,10]],           // C  top-right corner
+  [[0,10,10,10],[10,10,10,20],[0,20,10,20]], // D  opens left
+  [[10,10,20,10],[20,10,20,20],[10,20,20,20],[10,10,10,20]], // E square
+  [[20,10,30,10],[20,10,20,20],[20,20,30,20]], // F  opens right
+  [[0,20,10,20],[10,20,10,30]],           // G  bottom-left corner
+  [[10,20,20,20],[10,20,10,30],[20,20,20,30]], // H  opens down
+  [[20,20,30,20],[20,20,20,30]]           // I  bottom-right corner
+];
+var ticDots = [[5,5],[15,5],[25,5],[5,15],[15,15],[25,15],[5,25],[15,25],[25,25]];
+
+var abc1 = "ABCDEFGHI";
+var abc2 = "JKLMNOPQR";
+for (var i = 0; i < 9; i++) {
+  symbols[abc1[i]] = { segs: ticSegments[i], dot: null };
+  symbols[abc2[i]] = { segs: ticSegments[i], dot: ticDots[i] };
+}
+
+// The 4 triangles of an X: top, right, bottom, left
+var xSegments = {
+  top:    [[0,0,15,15],[30,0,15,15]],
+  right:  [[30,0,15,15],[30,30,15,15]],
+  bottom: [[0,30,15,15],[30,30,15,15]],
+  left:   [[0,0,15,15],[0,30,15,15]]
+};
+var xDots = { top:[15,6], right:[24,15], bottom:[15,24], left:[6,15] };
+var xOrder = ["top","right","bottom","left"];
+
+var abc3 = "STUV";
+var abc4 = "WXYZ";
+for (var j = 0; j < 4; j++) {
+  var k = xOrder[j];
+  symbols[abc3[j]] = { segs: xSegments[k], dot: null };
+  symbols[abc4[j]] = { segs: xSegments[k], dot: xDots[k] };
+}
+
+// Turn one letter into an SVG drawing of its pigpen symbol.
+function drawSymbol(letter, size) {
+  var s = symbols[letter];
+  if (!s) return "";
+  var svg = '<svg width="' + size + '" height="' + size + '" viewBox="-4 -4 38 38">';
+  for (var n = 0; n < s.segs.length; n++) {
+    var p = s.segs[n];
+    svg += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + p[2] + '" y2="' + p[3] +
+           '" stroke="black" stroke-width="3" stroke-linecap="round"/>';
+  }
+  if (s.dot) {
+    svg += '<circle cx="' + s.dot[0] + '" cy="' + s.dot[1] + '" r="2.5" fill="black"/>';
+  }
+  svg += '</svg>';
+  return svg;
+}
+
+// ---- The message -----------------------------------------------------------
+var message = "Hi Ethan!  I really like your website that you coded!  " +
+              "It's so cool and you're going to be a great coder";
+
+var messageEl = document.getElementById("message");
+for (var c = 0; c < message.length; c++) {
+  var ch = message[c];
+  var up = ch.toUpperCase();
+  if (up >= "A" && up <= "Z") {
+    var span = document.createElement("span");
+    span.innerHTML = drawSymbol(up, 34);
+    messageEl.appendChild(span);
+  } else if (ch === " ") {
+    var sp = document.createElement("span");
+    sp.className = "space";
+    messageEl.appendChild(sp);
+  } else {
+    // Keep punctuation like ! and ' visible so it's easier to read.
+    var pn = document.createElement("span");
+    pn.className = "punct";
+    pn.textContent = ch;
+    messageEl.appendChild(pn);
+  }
+}
+
+// ---- The decoder key -------------------------------------------------------
+var keyEl = document.getElementById("key");
+var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+for (var a = 0; a < alphabet.length; a++) {
+  var L = alphabet[a];
+  var cell = document.createElement("div");
+  cell.className = "cell";
+  cell.innerHTML = drawSymbol(L, 44) + '<div class="letter">' + L + '</div>';
+  keyEl.appendChild(cell);
+}
+
+// ---- Reveal button ---------------------------------------------------------
+document.getElementById("revealBtn").addEventListener("click", function () {
+  var ans = document.getElementById("answer");
+  ans.textContent = message;
+  ans.style.display = "block";
+});
+</script>
+
+</body>
+</html>

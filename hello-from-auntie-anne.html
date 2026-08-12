@@ -6,6 +6,9 @@
 
 <title>A secret message for Ethan</title>
 
+<!-- Poop emoji favicon (shows in the browser tab) -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💩</text></svg>">
+
 <style>
   body {
     background: lightpink;
@@ -18,7 +21,46 @@
     padding: 20px;
   }
 
-  /* The secret message, made of pigpen symbols */
+  /* A white card for each lesson */
+  .lesson {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 14px 0;
+  }
+
+  /* The Caesar secret message (typewriter style) */
+  .cipher {
+    font-family: "Courier New", monospace;
+    font-size: 22px;
+    letter-spacing: 2px;
+    word-spacing: 8px;
+    background: #fff8dc;
+    border-radius: 10px;
+    padding: 14px;
+    word-wrap: break-word;
+  }
+
+  /* The decoder strip (two rows of the alphabet) */
+  .strip { overflow-x: auto; margin: 10px 0; }
+  table.strip-table { border-collapse: collapse; }
+  .strip-table td {
+    border: 1px solid #ccc;
+    width: 24px;
+    text-align: center;
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    padding: 4px 0;
+  }
+  .strip-table th {
+    background: #eee;
+    white-space: nowrap;
+    padding: 4px 8px;
+    text-align: right;
+    font-size: 14px;
+  }
+
+  /* The secret pigpen message, made of symbols */
   #message {
     background: white;
     border-radius: 12px;
@@ -32,7 +74,7 @@
   .space { width: 20px; }             /* a gap between words */
   .punct { font-size: 28px; font-weight: bold; }
 
-  /* The decoder key */
+  /* The pigpen decoder key */
   #key {
     background: white;
     border-radius: 12px;
@@ -41,9 +83,7 @@
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 12px;
   }
-  .cell {
-    text-align: center;
-  }
+  .cell { text-align: center; }
   .cell .letter { font-size: 20px; font-weight: bold; }
 
   button {
@@ -52,12 +92,13 @@
     border-radius: 10px;
     cursor: pointer;
   }
-  #answer {
+  .answer, #answer {
     background: gold;
     border-radius: 12px;
     padding: 16px;
     font-size: 20px;
     font-weight: bold;
+    margin-top: 10px;
   }
 </style>
 </head>
@@ -67,12 +108,67 @@
 <h1>Hello from Auntie Anne! 💌</h1>
 
 <p>
-  Hi Ethan! I hid a secret message for you using the <b>pigpen cipher</b>.
-  Every little symbol below is one letter. Use the <b>key</b> at the bottom
-  to figure out what it says. You got this!
+  Ethan, I want to teach you a new code so you have a new secret message spy tool.
+  It's called the <b>Caesar cipher</b>, and it is more than <b>2,000 years old</b>!
+</p>
+<p>
+  A long time ago, the Roman general <b>Julius Caesar</b> really used this code to
+  send secret battle orders to his army. If an enemy stole the message, they just
+  saw a jumble of letters and couldn't read his military secrets. It works by
+  sliding every letter down the alphabet by the same number of steps. You can read
+  the whole story on
+  <a href="https://en.wikipedia.org/wiki/Caesar_cipher" target="_blank">Wikipedia here</a>.
+</p>
+<p>
+  Already finished the <b>pigpen puzzle</b> at the bottom of the page? Amazing!! Here
+  is your next challenge. 🕵️
 </p>
 
-<h2>The secret message</h2>
+<!-- ============ STEP 1: shift by 1 ============ -->
+<div class="lesson">
+  <h2>Step 1: slide by 1 &nbsp;(a = b)</h2>
+  <p>
+    In this code every letter moves forward by <b>ONE</b>. So <b>a</b> becomes <b>b</b>,
+    <b>b</b> becomes <b>c</b>, and <b>z</b> wraps all the way back around to <b>a</b>.
+    Use the strip below: find each <b>secret</b> letter on the bottom row, then read
+    the <b>real</b> letter right above it.
+  </p>
+  <div class="strip" id="strip1"></div>
+  <p><b>Here is your secret message:</b></p>
+  <div class="cipher" id="cipher1"></div>
+  <p>
+    <button id="btn1" type="button">I decoded it! Show me the answer</button>
+  </p>
+  <div class="answer" id="ans1" style="display:none;"></div>
+</div>
+
+<!-- ============ STEP 2: shift by 3 (the real Caesar) ============ -->
+<div class="lesson">
+  <h2>Step 2: the REAL Caesar cipher — slide by 3 &nbsp;(a = d)</h2>
+  <p>
+    Julius Caesar's favorite shift was <b>THREE</b>. So <b>a</b> becomes <b>d</b>,
+    <b>b</b> becomes <b>e</b>, and so on around the alphabet. This one is trickier —
+    take your time and use the new strip!
+  </p>
+  <div class="strip" id="strip2"></div>
+  <p><b>Here is your secret message:</b></p>
+  <div class="cipher" id="cipher2"></div>
+  <p>
+    <button id="btn2" type="button">I decoded it! Show me the answer</button>
+  </p>
+  <div class="answer" id="ans2" style="display:none;"></div>
+</div>
+
+<hr>
+
+<!-- ============ PIGPEN (moved to the bottom) ============ -->
+<h2>🐷 Your first puzzle: the pigpen cipher</h2>
+<p>
+  This is the puzzle you already know! Every little symbol below is one letter.
+  Use the <b>key</b> at the bottom to figure out what it says. You got this!
+</p>
+
+<h3>The secret message</h3>
 <div id="message"></div>
 
 <p>
@@ -81,16 +177,92 @@
 </p>
 <div id="answer" style="display:none;"></div>
 
-<h2>The decoder key</h2>
+<h3>The decoder key</h3>
 <p>Each symbol stands for a letter. Match them up!</p>
 <div id="key"></div>
 
 <hr>
 <p><a href="index.html">← Back to Ethan's website</a></p>
-<p>Made with <3 by Auntie Anne</p>
+<p>Made with &lt;3 by Auntie Anne</p>
 
 <script>
-// ---- Build the pigpen symbol for every letter ------------------------------
+// ===========================================================================
+//  CAESAR CIPHER
+// ===========================================================================
+// Shift every letter forward by `shift` steps (wrapping around from Z to A).
+function caesarShift(text, shift) {
+  return text.replace(/[a-z]/gi, function (ch) {
+    var base = ch <= "Z" ? 65 : 97;
+    return String.fromCharCode((ch.charCodeAt(0) - base + shift + 26) % 26 + base);
+  });
+}
+
+var ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// Build the two-row decoder strip: top = the real letter, bottom = the secret code.
+function renderStrip(containerId, shift) {
+  var table = document.createElement("table");
+  table.className = "strip-table";
+
+  var realRow = document.createElement("tr");
+  var secretRow = document.createElement("tr");
+
+  var h1 = document.createElement("th"); h1.textContent = "Real letter →";
+  var h2 = document.createElement("th"); h2.textContent = "Secret code →";
+  realRow.appendChild(h1);
+  secretRow.appendChild(h2);
+
+  for (var i = 0; i < 26; i++) {
+    var real = document.createElement("td");
+    real.textContent = ALPHA[i];
+    realRow.appendChild(real);
+
+    var secret = document.createElement("td");
+    secret.textContent = caesarShift(ALPHA[i], shift);
+    secretRow.appendChild(secret);
+  }
+
+  table.appendChild(realRow);
+  table.appendChild(secretRow);
+  document.getElementById(containerId).appendChild(table);
+}
+
+// Show a plaintext message as UPPERCASE secret code (classic spy style).
+function renderCipher(containerId, plaintext, shift) {
+  document.getElementById(containerId).textContent =
+    caesarShift(plaintext.toUpperCase(), shift);
+}
+
+// Wire up a "show the answer" button. answerHTML lets us include links.
+function wireReveal(btnId, answerId, answerHTML) {
+  document.getElementById(btnId).addEventListener("click", function () {
+    var ans = document.getElementById(answerId);
+    ans.innerHTML = answerHTML;
+    ans.style.display = "block";
+  });
+}
+
+// ---- Step 1: shift of 1 (a = b) -------------------------------------------
+var msg1 = "you have decoded the first step to learning a caesar cipher!";
+renderStrip("strip1", 1);
+renderCipher("cipher1", msg1, 1);
+wireReveal("btn1", "ans1", "You have decoded the first step to learning a Caesar cipher!");
+
+// ---- Step 2: shift of 3 (a = d), the real Caesar cipher -------------------
+var msg2 = "you did it! now you can send me caesar ciphers all the time. " +
+           "i love secret messages and steganography. Vinay, Maxie and I write " +
+           "messages to each other in secret all the time and now you're part of the club";
+renderStrip("strip2", 3);
+renderCipher("cipher2", msg2, 3);
+wireReveal("btn2", "ans2",
+  "You did it! Now you can send me Caesar ciphers all the time. I love secret " +
+  "messages and <a href=\"https://en.wikipedia.org/wiki/Steganography\" target=\"_blank\">steganography</a>. " +
+  "Vinay, Maxie and I write messages to each other in secret all the time and now you're part of the club! 💜");
+
+
+// ===========================================================================
+//  PIGPEN CIPHER
+// ===========================================================================
 // Letters A–R live in two tic-tac-toe grids (the second half get a dot).
 // Letters S–Z live in two X shapes (the second half get a dot).
 // We draw both the message AND the key with this same function, so the
@@ -154,7 +326,7 @@ function drawSymbol(letter, size) {
   return svg;
 }
 
-// ---- The message -----------------------------------------------------------
+// ---- The pigpen message ----------------------------------------------------
 var message = "Hi Ethan!  I really like your website that you coded!  " +
               "It's so cool and you're going to be a great coder";
 
@@ -179,18 +351,17 @@ for (var c = 0; c < message.length; c++) {
   }
 }
 
-// ---- The decoder key -------------------------------------------------------
+// ---- The pigpen decoder key ------------------------------------------------
 var keyEl = document.getElementById("key");
-var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-for (var a = 0; a < alphabet.length; a++) {
-  var L = alphabet[a];
+for (var a = 0; a < ALPHA.length; a++) {
+  var L = ALPHA[a];
   var cell = document.createElement("div");
   cell.className = "cell";
   cell.innerHTML = drawSymbol(L, 44) + '<div class="letter">' + L + '</div>';
   keyEl.appendChild(cell);
 }
 
-// ---- Reveal button ---------------------------------------------------------
+// ---- Pigpen reveal button --------------------------------------------------
 document.getElementById("revealBtn").addEventListener("click", function () {
   var ans = document.getElementById("answer");
   ans.textContent = message;

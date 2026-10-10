@@ -76,7 +76,7 @@
   .drawer {
     position: absolute;
     top: 80px;
-    right: calc(6% + 30px);   /* closed: the drawer front stops right at the cabinet */
+    right: calc(6% + 34px);   /* closed: the drawer front stops right at the cabinet */
     width: 56%;
     height: 80px;
     transition: transform 0.18s ease-in;
@@ -95,9 +95,9 @@
   .drawer-front {
     position: absolute;
     left: 0;
-    top: -12px;
+    top: -50px;               /* as tall as the cabinet, like a real drawer front */
     width: 18px;
-    height: 104px;
+    height: 170px;
     background: var(--wood-dark);
     border-radius: 4px;
   }
@@ -113,17 +113,20 @@
     border: 3px solid black;
   }
 
-  /* the two pieces of foil */
+  /* the two pieces of foil, each folded over a top edge */
   .foil {
     position: absolute;
-    width: 6px;
-    height: 46px;
+    background: linear-gradient(135deg, #ffffff, #b9c3ca 40%, #7d8a93 60%, #e9eef1);
+    border: 2px solid #333;
+    border-radius: 2px;
     z-index: 2;
-    background: linear-gradient(90deg, #eef2f5, #9aa6ae, #eef2f5);
-    border: 1px solid #555;
   }
-  .foil.on-drawer { left: 18px; top: 17px; }
-  .foil.on-cabinet { left: calc(38% - 6px); top: 97px; }
+  /* foil #1: over the top of the drawer front and down its back side */
+  .foil.drawer-top  { left: -2px; top: -58px; width: 28px; height: 10px; }
+  .foil.drawer-back { left: 18px; top: -58px; width: 9px;  height: 56px; }
+  /* foil #2: over the top front corner of the cabinet */
+  .foil.cabinet-top   { left: calc(38% - 8px); top: 22px; width: 60px; height: 10px; }
+  .foil.cabinet-front { left: calc(38% - 8px); top: 22px; width: 9px;  height: 56px; }
 
   .status {
     font-size: 26px;
@@ -250,12 +253,14 @@
 <div class="stage">
   <div class="drawer-box" id="drawerBox" aria-label="The drawer. Tap and hold to close it.">
     <div class="cabinet"></div>
-    <div class="foil on-cabinet"></div>
+    <div class="foil cabinet-top"></div>
+    <div class="foil cabinet-front"></div>
     <div class="drawer">
       <div class="drawer-body"></div>
       <div class="drawer-front"></div>
       <div class="drawer-knob"></div>
-      <div class="foil on-drawer"></div>
+      <div class="foil drawer-top"></div>
+      <div class="foil drawer-back"></div>
     </div>
   </div>
   <p class="status" id="status">The drawer is OPEN. Close it! 👀</p>
@@ -292,20 +297,23 @@
         <!-- cabinet -->
         <rect x="120" y="20" width="170" height="90" rx="5" fill="#b5763c" stroke="#7a4a1f" stroke-width="3"/>
         <!-- drawer pulled out -->
-        <rect x="45" y="45" width="150" height="40" fill="#d89a5b" stroke="#7a4a1f" stroke-width="3"/>
-        <rect x="36" y="38" width="10" height="54" rx="2" fill="#7a4a1f"/>
-        <!-- foil -->
-        <rect x="46" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
-        <rect x="114" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
+        <rect x="46" y="45" width="150" height="40" fill="#d89a5b" stroke="#7a4a1f" stroke-width="3"/>
+        <rect x="36" y="20" width="10" height="90" rx="2" fill="#7a4a1f"/>
+        <!-- foil #1: over the top of the drawer front, down the back -->
+        <rect x="35" y="16" width="16" height="4" fill="#cfd6dc" stroke="#555"/>
+        <rect x="46" y="16" width="5" height="26" fill="#cfd6dc" stroke="#555"/>
+        <!-- foil #2: over the top front corner of the cabinet -->
+        <rect x="115" y="16" width="40" height="4" fill="#cfd6dc" stroke="#555"/>
+        <rect x="115" y="16" width="5" height="26" fill="#cfd6dc" stroke="#555"/>
         <!-- wires -->
-        <path d="M49 84 C 45 120, 90 130, 120 132" fill="none" stroke="#e2231a" stroke-width="3"/>
-        <path d="M117 84 C 118 105, 150 115, 170 128" fill="none" stroke="#333" stroke-width="3"/>
+        <path d="M37 18 C 10 30, 10 130, 120 134" fill="none" stroke="#e2231a" stroke-width="3"/>
+        <path d="M150 18 C 210 0, 230 120, 186 128" fill="none" stroke="#333" stroke-width="3"/>
         <!-- Makey Makey -->
         <rect x="120" y="120" width="70" height="26" rx="5" fill="#e2231a" stroke="black" stroke-width="2"/>
         <circle cx="137" cy="133" r="6" fill="white" stroke="black"/>
         <rect x="160" y="140" width="26" height="4" fill="#333"/>
-        <text x="80" y="30" font-size="16" text-anchor="middle">gap!</text>
-        <path d="M52 36 L 112 36" stroke="black" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="83" y="38" font-size="15" text-anchor="middle">gap!</text>
+        <path d="M54 26 L 112 26" stroke="black" stroke-width="1.5" stroke-dasharray="4 3"/>
       </svg>
       <p>The two pieces of foil don't touch, so the circuit is <b>open</b>. No sound.</p>
     </div>
@@ -317,19 +325,21 @@
         <rect x="120" y="20" width="170" height="90" rx="5" fill="#b5763c" stroke="#7a4a1f" stroke-width="3"/>
         <!-- drawer pushed in -->
         <rect x="120" y="45" width="150" height="40" fill="#d89a5b" stroke="#7a4a1f" stroke-width="3"/>
-        <rect x="110" y="38" width="10" height="54" rx="2" fill="#7a4a1f"/>
-        <!-- foil touching -->
-        <rect x="120" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
-        <rect x="125" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
+        <rect x="100" y="20" width="10" height="90" rx="2" fill="#7a4a1f"/>
+        <!-- foil #1 and foil #2 squished together -->
+        <rect x="99" y="16" width="16" height="4" fill="#cfd6dc" stroke="#555"/>
+        <rect x="110" y="16" width="5" height="26" fill="#cfd6dc" stroke="#555"/>
+        <rect x="115" y="16" width="40" height="4" fill="#cfd6dc" stroke="#555"/>
+        <rect x="115" y="16" width="5" height="26" fill="#cfd6dc" stroke="#555"/>
         <!-- wires -->
-        <path d="M118 84 C 100 110, 115 125, 125 128" fill="none" stroke="#e2231a" stroke-width="3"/>
-        <path d="M130 84 C 140 105, 160 115, 170 128" fill="none" stroke="#333" stroke-width="3"/>
+        <path d="M101 18 C 75 30, 80 130, 120 134" fill="none" stroke="#e2231a" stroke-width="3"/>
+        <path d="M150 18 C 210 0, 230 120, 186 128" fill="none" stroke="#333" stroke-width="3"/>
         <!-- Makey Makey -->
         <rect x="120" y="120" width="70" height="26" rx="5" fill="#e2231a" stroke="black" stroke-width="2"/>
         <circle cx="137" cy="133" r="6" fill="white" stroke="black"/>
         <rect x="160" y="140" width="26" height="4" fill="#333"/>
-        <text x="70" y="60" font-size="34" text-anchor="middle">💨</text>
-        <text x="125" y="15" font-size="14" text-anchor="middle">foil touches!</text>
+        <text x="50" y="70" font-size="34" text-anchor="middle">💨</text>
+        <text x="112" y="11" font-size="13" text-anchor="middle">foil touches!</text>
       </svg>
       <p>The foil on the drawer presses on the foil on the cabinet. The circuit is <b>closed</b>. FART!</p>
     </div>
@@ -340,10 +350,11 @@
         A little light on the Makey Makey turns on.</li>
     <li>Fold a piece of foil a few times to make a thick strip, about as big as your finger.
         Make two of these.</li>
-    <li><b>Foil #1 goes on the drawer.</b> Tape it to the <b>back side of the drawer front</b>, the part
-        that bumps into the cabinet when the drawer closes.</li>
-    <li><b>Foil #2 goes on the cabinet.</b> Tape it on the edge of the cabinet <b>exactly where foil #1
-        bumps into it</b>. Close the drawer and check that the two foils squish together.</li>
+    <li><b>Foil #1 goes on the drawer.</b> Fold it over the <b>top edge of the drawer front</b>, so it
+        covers the top and goes down the <b>back side</b> (the side that bumps into the cabinet). Tape it down.</li>
+    <li><b>Foil #2 goes on the cabinet.</b> Fold it over the <b>top front corner of the cabinet</b>, right
+        above the drawer hole, so it covers the top and goes down the front. Tape it down.
+        Close the drawer and check that the two foils squish together.</li>
     <li>Clip <span class="tag space">SPACE</span> (the round spot on the front of the Makey Makey) to <b>foil #1</b>
         (the drawer). Leave the wire a little loose so the drawer can still open.</li>
     <li>Clip <span class="tag earth">EARTH</span> (the strip along the bottom) to <b>foil #2</b> (the cabinet).</li>

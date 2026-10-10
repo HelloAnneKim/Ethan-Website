@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+<!-- The name of the page (shows in the browser tab) -->
+<title>Fart Drawer</title>
+
+<!-- Dash emoji favicon (shows in the browser tab) -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💨</text></svg>">
+
+<style>
+  /* ETHAN PICKS THESE COLORS.
+     Try: lightblue, gold, lime, tomato, aqua, orange */
+  :root {
+    --background: lightblue;
+    --text-color: black;
+    --wood: #b5763c;
+    --wood-dark: #7a4a1f;
+    --card: rgba(255, 255, 255, 0.85);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--background);
+    color: var(--text-color);
+    font-family: Verdana, sans-serif;
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a { color: inherit; }
+
+  h1 {
+    text-align: center;
+    font-size: 44px;
+    margin: 10px 0 0;
+  }
+
+  /* ---------- The drawer ---------- */
+  .stage {
+    text-align: center;
+    margin: 10px 0 10px;
+  }
+
+  .drawer-box {
+    position: relative;
+    width: min(420px, 100%);
+    height: 220px;
+    margin: 10px auto 0;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  /* the cabinet (seen from the side) */
+  .cabinet {
+    position: absolute;
+    right: 0;
+    top: 30px;
+    width: 62%;
+    height: 170px;
+    background: var(--wood);
+    border: 4px solid var(--wood-dark);
+    border-radius: 8px;
+  }
+
+  /* the drawer that slides in and out */
+  .drawer {
+    position: absolute;
+    top: 80px;
+    right: calc(6% + 30px);   /* closed: the drawer front stops right at the cabinet */
+    width: 56%;
+    height: 80px;
+    transition: transform 0.18s ease-in;
+    transform: translateX(-62%);
+  }
+  .closed .drawer { transform: translateX(0); }
+
+  .drawer-body {
+    position: absolute;
+    inset: 0 0 0 14px;
+    background: #d89a5b;
+    border: 4px solid var(--wood-dark);
+    border-left: none;
+  }
+
+  .drawer-front {
+    position: absolute;
+    left: 0;
+    top: -12px;
+    width: 18px;
+    height: 104px;
+    background: var(--wood-dark);
+    border-radius: 4px;
+  }
+
+  .drawer-knob {
+    position: absolute;
+    left: -14px;
+    top: 38px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: gold;
+    border: 3px solid black;
+  }
+
+  /* the two pieces of foil */
+  .foil {
+    position: absolute;
+    width: 6px;
+    height: 46px;
+    z-index: 2;
+    background: linear-gradient(90deg, #eef2f5, #9aa6ae, #eef2f5);
+    border: 1px solid #555;
+  }
+  .foil.on-drawer { left: 18px; top: 17px; }
+  .foil.on-cabinet { left: calc(38% - 6px); top: 97px; }
+
+  .status {
+    font-size: 26px;
+    font-weight: bold;
+    margin: 6px 0 0;
+    min-height: 40px;
+  }
+
+  .fart-count { font-size: 20px; margin: 0; }
+
+  .cloud {
+    position: fixed;
+    font-size: 70px;
+    pointer-events: none;
+    animation: puff 1.4s ease-out forwards;
+  }
+
+  @keyframes puff {
+    from { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    to   { transform: translate(calc(-50% + var(--dx)), calc(-50% - 180px)) scale(1.8); opacity: 0; }
+  }
+
+  .shake { animation: shake 0.35s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px) rotate(-1deg); }
+    40% { transform: translateX(8px) rotate(1deg); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  button {
+    font: inherit;
+    font-size: 18px;
+    padding: 10px 20px;
+    border: 3px solid black;
+    border-radius: 14px;
+    background: white;
+    cursor: pointer;
+  }
+
+  button:active { transform: translateY(2px); }
+  button[hidden] { display: none; }
+
+  button.recording {
+    background: #e2231a;
+    color: white;
+    animation: pulse 0.8s infinite alternate;
+  }
+
+  @keyframes pulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.08); }
+  }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--card);
+    border: 3px solid black;
+    border-radius: 18px;
+    padding: 16px 20px;
+    margin-top: 24px;
+  }
+
+  .card h2 { margin: 0 0 8px; font-size: 26px; }
+  .card ol { padding-left: 24px; margin: 0; }
+  .card li { margin-bottom: 10px; }
+
+  .tag {
+    display: inline-block;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-weight: bold;
+    color: white;
+  }
+  .tag.space { background: #e2231a; }
+  .tag.earth { background: #333; }
+
+  .modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 12px 0 16px;
+  }
+
+  .mode {
+    border: 2px dashed black;
+    border-radius: 14px;
+    padding: 10px 14px;
+  }
+
+  .mode h3 { margin: 0 0 6px; font-size: 20px; }
+  .mode svg { width: 100%; height: auto; display: block; }
+  .mode p { margin: 6px 0 0; font-size: 16px; }
+
+  .small { font-size: 15px; }
+
+  summary { cursor: pointer; }
+  summary h2 { display: inline; }
+  .sound-info { list-style: none; padding: 0; margin: 10px 0; font-size: 16px; }
+  .sound-info li { margin-bottom: 4px; }
+  .sound-help h3 { margin: 16px 0 6px; font-size: 20px; }
+
+  @media (max-width: 600px) {
+    .modes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+
+<body>
+
+<p class="small"><a href="../">← back to Makey Makey projects</a></p>
+
+<h1>💨 Fart Drawer 💨</h1>
+
+<div class="stage">
+  <div class="drawer-box" id="drawerBox" aria-label="The drawer. Tap and hold to close it.">
+    <div class="cabinet"></div>
+    <div class="foil on-cabinet"></div>
+    <div class="drawer">
+      <div class="drawer-body"></div>
+      <div class="drawer-front"></div>
+      <div class="drawer-knob"></div>
+      <div class="foil on-drawer"></div>
+    </div>
+  </div>
+  <p class="status" id="status">The drawer is OPEN. Close it! 👀</p>
+  <p class="fart-count" id="fartCount">Farts: 0</p>
+  <div class="buttons">
+    <button id="reset">🔄 Start over</button>
+    <button id="sound">🔊 Sound on</button>
+  </div>
+  <p class="small" style="margin-top:10px">No Makey Makey yet? Press and hold the drawer picture to close it.</p>
+</div>
+
+
+<div class="card">
+  <h2>🎙️ Record your own fart sound</h2>
+  <p style="margin:0 0 10px">Make your best fart noise (with your mouth! 😂) and the drawer will play it.</p>
+  <div class="buttons" style="justify-content:flex-start;margin-top:0">
+    <button id="record">🔴 Record</button>
+    <button id="play" hidden>▶️ Play it</button>
+    <button id="useBuiltIn" hidden>🗑️ Go back to built-in farts</button>
+  </div>
+  <p class="small" id="recordStatus" style="margin:10px 0 0">Now playing: surprise built-in farts 🎲</p>
+</div>
+
+
+<div class="card">
+  <h2>🔌 How to build it</h2>
+  <p style="margin:0 0 6px">You need: a <b>Makey Makey</b>, the <b>USB-C adapter</b>, <b>2 alligator clips</b>,
+     <b>aluminum foil</b>, <b>tape</b>, and a <b>drawer</b>.</p>
+
+  <div class="modes">
+    <div class="mode">
+      <h3>Drawer OPEN = quiet 🤫</h3>
+      <svg viewBox="0 0 300 150" role="img" aria-label="Drawer open: the foil on the drawer is far from the foil on the cabinet, so nothing happens">
+        <!-- cabinet -->
+        <rect x="120" y="20" width="170" height="90" rx="5" fill="#b5763c" stroke="#7a4a1f" stroke-width="3"/>
+        <!-- drawer pulled out -->
+        <rect x="45" y="45" width="150" height="40" fill="#d89a5b" stroke="#7a4a1f" stroke-width="3"/>
+        <rect x="36" y="38" width="10" height="54" rx="2" fill="#7a4a1f"/>
+        <!-- foil -->
+        <rect x="46" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
+        <rect x="114" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
+        <!-- wires -->
+        <path d="M49 84 C 45 120, 90 130, 120 132" fill="none" stroke="#e2231a" stroke-width="3"/>
+        <path d="M117 84 C 118 105, 150 115, 170 128" fill="none" stroke="#333" stroke-width="3"/>
+        <!-- Makey Makey -->
+        <rect x="120" y="120" width="70" height="26" rx="5" fill="#e2231a" stroke="black" stroke-width="2"/>
+        <circle cx="137" cy="133" r="6" fill="white" stroke="black"/>
+        <rect x="160" y="140" width="26" height="4" fill="#333"/>
+        <text x="80" y="30" font-size="16" text-anchor="middle">gap!</text>
+        <path d="M52 36 L 112 36" stroke="black" stroke-width="1.5" stroke-dasharray="4 3"/>
+      </svg>
+      <p>The two pieces of foil don't touch, so the circuit is <b>open</b>. No sound.</p>
+    </div>
+
+    <div class="mode">
+      <h3>Drawer CLOSED = 💨</h3>
+      <svg viewBox="0 0 300 150" role="img" aria-label="Drawer closed: the foil on the drawer presses on the foil on the cabinet, closing the circuit">
+        <!-- cabinet -->
+        <rect x="120" y="20" width="170" height="90" rx="5" fill="#b5763c" stroke="#7a4a1f" stroke-width="3"/>
+        <!-- drawer pushed in -->
+        <rect x="120" y="45" width="150" height="40" fill="#d89a5b" stroke="#7a4a1f" stroke-width="3"/>
+        <rect x="110" y="38" width="10" height="54" rx="2" fill="#7a4a1f"/>
+        <!-- foil touching -->
+        <rect x="120" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
+        <rect x="125" y="48" width="5" height="34" fill="#cfd6dc" stroke="#555"/>
+        <!-- wires -->
+        <path d="M118 84 C 100 110, 115 125, 125 128" fill="none" stroke="#e2231a" stroke-width="3"/>
+        <path d="M130 84 C 140 105, 160 115, 170 128" fill="none" stroke="#333" stroke-width="3"/>
+        <!-- Makey Makey -->
+        <rect x="120" y="120" width="70" height="26" rx="5" fill="#e2231a" stroke="black" stroke-width="2"/>
+        <circle cx="137" cy="133" r="6" fill="white" stroke="black"/>
+        <rect x="160" y="140" width="26" height="4" fill="#333"/>
+        <text x="70" y="60" font-size="34" text-anchor="middle">💨</text>
+        <text x="125" y="15" font-size="14" text-anchor="middle">foil touches!</text>
+      </svg>
+      <p>The foil on the drawer presses on the foil on the cabinet. The circuit is <b>closed</b>. FART!</p>
+    </div>
+  </div>
+
+  <ol>
+    <li>Plug the <b>Makey Makey</b> USB cable into the <b>USB-C adapter</b>, then plug the adapter into the iPad.
+        A little light on the Makey Makey turns on.</li>
+    <li>Fold a piece of foil a few times to make a thick strip, about as big as your finger.
+        Make two of these.</li>
+    <li><b>Foil #1 goes on the drawer.</b> Tape it to the <b>back side of the drawer front</b>, the part
+        that bumps into the cabinet when the drawer closes.</li>
+    <li><b>Foil #2 goes on the cabinet.</b> Tape it on the edge of the cabinet <b>exactly where foil #1
+        bumps into it</b>. Close the drawer and check that the two foils squish together.</li>
+    <li>Clip <span class="tag space">SPACE</span> (the round spot on the front of the Makey Makey) to <b>foil #1</b>
+        (the drawer). Leave the wire a little loose so the drawer can still open.</li>
+    <li>Clip <span class="tag earth">EARTH</span> (the strip along the bottom) to <b>foil #2</b> (the cabinet).</li>
+    <li>Tap this page once so the iPad is listening. Then open the drawer and close it. 💨</li>
+  </ol>
+
+  <p class="small" style="margin-top:14px">
+    <b>Not farting?</b> The clips have to bite the foil, not the tape. Tape over the <i>edges</i> of the foil
+    so the shiny middle is still showing. A little crumpled foil ball makes a bump that touches better.
+    <br><b>Farting when it's open?</b> The two clips or foils are touching somewhere else. Keep them apart.
+    <br><b>Close the drawer gently</b> and keep fingers out of the way! 🖐️
+  </p>
+</div>
+
+
+<div class="card sound-help">
+  <details id="soundHelp">
+    <summary><h2>🔧 Sound not working?</h2></summary>
+
+    <p>Tap each test button. Did you hear it?</p>
+    <div class="buttons" style="justify-content:flex-start;margin-top:0">
+      <button id="testFart">💨 Test fart</button>
+      <button id="testMusic">🎵 Test video-style sound</button>
+      <button id="testMine" hidden>🎤 Test my sound</button>
+    </div>
+    <ul class="sound-info" id="soundInfo"></ul>
+
+    <p><b>Heard 🎵 but not 💨?</b> The iPad is in <b>Silent mode</b> (see #1 below).
+       Videos and Spotify still play in Silent mode, but game sounds don't.</p>
+    <p><b>Didn't hear either one?</b> Check the volume and Bluetooth (#2 and #3).</p>
+
+    <h3>Check these on the iPad</h3>
+    <ol>
+      <li><b>Silent mode</b> (the usual problem!). Swipe down from the top-right corner of the screen.
+          If the 🔔 bell is crossed out, tap it to turn sound on. (Older iPads with a little switch on the
+          side: flip it so no orange shows.)</li>
+      <li><b>Volume.</b> Press the volume-up button while you're on this page.</li>
+      <li><b>Bluetooth.</b> Make sure the sound isn't going to headphones or a speaker in another room.
+          In Control Center, tap the AirPlay icon on the music box and pick <i>iPad</i>.</li>
+      <li><b>Microphone (for recording).</b> In Safari, tap <b>aA</b> or the page menu next to the
+          web address → <b>Website Settings</b> → <b>Microphone</b> → <b>Allow</b>.
+          If the iPad uses Screen Time: <b>Settings → Screen Time → Content &amp; Privacy Restrictions
+          → Microphone → Allow Changes</b>.</li>
+      <li><b>Headphones too quiet?</b> <b>Settings → Sounds → Headphone Safety → Reduce Loud Audio</b>
+          (Screen Time may lock this one).</li>
+      <li>Still stuck? Reload this page, tap the screen once, and try the tests again.</li>
+    </ol>
+  </details>
+</div>
+
+<hr>
+<p class="small">Made by Ethan with help from Auntie Anne and Caleb</p>
+
+
+<script>
+  var farts = 0;
+  var lastFart = 0;           // time of the last fart
+  var WAIT = 500;             // milliseconds before the drawer can fart again (stops double farts)
+  var soundOn = true;
+  var isClosed = false;
+
+  var boxEl = document.getElementById("drawerBox");
+  var statusEl = document.getElementById("status");
+  var countEl = document.getElementById("fartCount");
+  var resetBtn = document.getElementById("reset");
+  var soundBtn = document.getElementById("sound");
+
+  var fartWords = ["PFFFT! 💨", "BRAAAP! 💨", "Toot toot! 🎺", "Excuse me! 😳", "Who did that?! 👃", "Phew, stinky! 🤢", "Squeak! 🐭"];
+  var clouds = ["💨", "💨", "💩", "🤢", "☁️"];
+
+  // Remember the fart count if the page reloads
+  try { farts = parseInt(localStorage.getItem("fartCount"), 10) || 0; } catch (e) {}
+  showCount();
+
+  function showCount() {
+    countEl.textContent = "Farts: " + farts;
+  }
+
+  function save() {
+    try { localStorage.setItem("fartCount", farts); } catch (e) {}
+  }
+
+  // The drawer closed! (the circuit is complete)
+  function drawerClosed() {
+    if (isClosed) return;
+    isClosed = true;
+    boxEl.classList.add("closed");
+
+    var now = Date.now();
+    if (now - lastFart < WAIT) {      // the foil bounced, don't fart twice
+      statusEl.textContent = "The drawer is CLOSED.";
+      return;
+    }
+    lastFart = now;
+
+    farts = farts + 1;
+    showCount();
+    save();
+
+    statusEl.textContent = fartWords[Math.floor(Math.random() * fartWords.length)];
+    statusEl.classList.remove("shake");
+    void statusEl.offsetWidth;        // restart the shake animation
+    statusEl.classList.add("shake");
+    for (var i = 0; i < 4; i++) puffCloud();
+
+    if (mySound) playMySound(0.85 + Math.random() * 0.3);   // a little different every time
+    else playFart();
+  }
+
+  // The drawer opened (the circuit is broken)
+  function drawerOpened() {
+    if (!isClosed) return;
+    isClosed = false;
+    boxEl.classList.remove("closed");
+    statusEl.textContent = "The drawer is OPEN. Close it! 👀";
+  }
+
+  function puffCloud() {
+    var box = boxEl.getBoundingClientRect();
+    var e = document.createElement("div");
+    e.className = "cloud";
+    e.textContent = clouds[Math.floor(Math.random() * clouds.length)];
+    e.style.left = (box.left + box.width * (0.15 + Math.random() * 0.3)) + "px";
+    e.style.top = (box.top + box.height * 0.5) + "px";
+    e.style.setProperty("--dx", ((Math.random() - 0.7) * 200) + "px");
+    document.body.appendChild(e);
+    setTimeout(function () { e.remove(); }, 1400);
+  }
+
+  // ---------- Sound ----------
+  var audio = null;
+  var micOn = false;
+  function getAudio() {
+    if (!micOn) setAudioMode("playback");
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+    return audio;
+  }
+
+  // iPads play game sounds in "ambient" mode, which goes quiet when the iPad is on
+  // Silent. "playback" mode plays sound like a video does, even on Silent.
+  function setAudioMode(mode) {
+    try {
+      if (navigator.audioSession && navigator.audioSession.type !== mode) {
+        navigator.audioSession.type = mode;
+      }
+    } catch (e) {}
+  }
+
+  // A fart made by the computer! Each one is a little different.
+  // A buzzy low note that wobbles, plus a little bit of "air" noise.
+  function playFart() {
+    if (!soundOn) return;
+    try {
+      var ctx = getAudio();
+      var now = ctx.currentTime;
+
+      var kinds = [
+        { low: 60,  high: 95,  length: 0.9 },   // big rumbly one
+        { low: 85,  high: 140, length: 0.6 },   // regular
+        { low: 150, high: 260, length: 0.35 },  // squeaker
+        { low: 70,  high: 120, length: 1.4 }    // the looong one
+      ];
+      var kind = kinds[Math.floor(Math.random() * kinds.length)];
+      var length = kind.length * (0.8 + Math.random() * 0.4);
+
+      var osc = ctx.createOscillator();
+      osc.type = "sawtooth";
+      var filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 500 + Math.random() * 400;
+      filter.Q.value = 6;
+      var gain = ctx.createGain();
+
+      // wobble the pitch and the loudness every few milliseconds
+      var steps = Math.floor(length / 0.03);
+      osc.frequency.setValueAtTime(kind.high, now);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.5, now + 0.03);
+      for (var i = 1; i <= steps; i++) {
+        var t = now + i * 0.03;
+        var slide = 1 - i / steps;                      // pitch drops as it goes
+        var f = kind.low + (kind.high - kind.low) * slide * (0.7 + Math.random() * 0.6);
+        osc.frequency.linearRampToValueAtTime(Math.max(30, f), t);
+        gain.gain.linearRampToValueAtTime(0.25 + Math.random() * 0.35, t);
+      }
+      gain.gain.exponentialRampToValueAtTime(0.001, now + length + 0.08);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + length + 0.1);
+
+      // the "air"
+      var noiseLen = Math.floor(ctx.sampleRate * (length + 0.1));
+      var noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+      var d = noiseBuf.getChannelData(0);
+      for (var j = 0; j < noiseLen; j++) d[j] = Math.random() * 2 - 1;
+      var noise = ctx.createBufferSource();
+      noise.buffer = noiseBuf;
+      var band = ctx.createBiquadFilter();
+      band.type = "bandpass";
+      band.frequency.value = 250;
+      band.Q.value = 1.5;
+      var noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.12, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + length + 0.08);
+      noise.connect(band);
+      band.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noise.start(now);
+    } catch (e) {}
+  }
+
+  // Make a .wav sound file in code (used for the tests and the backup trick)
+  function makeWav(seconds, freq) {
+    var rate = 22050, n = Math.floor(rate * seconds);
+    var buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    function str(at, t) { for (var i = 0; i < t.length; i++) v.setUint8(at + i, t.charCodeAt(i)); }
+    str(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); str(8, "WAVE"); str(12, "fmt ");
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true);
+    v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, n * 2, true);
+    for (var i = 0; i < n; i++) {
+      var fade = Math.min(1, (n - i) / (rate * 0.05));
+      v.setInt16(44 + i * 2, freq ? Math.sin(2 * Math.PI * freq * i / rate) * 9000 * fade : 0, true);
+    }
+    return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+  }
+
+  // Backup trick for older iPads: quietly play a silent video-style sound on a loop,
+  // which makes the iPad use "playback" mode for everything on the page.
+  var silentLoop = null;
+  function keepSoundAwake() {
+    if (navigator.audioSession) return;   // newer iPads don't need it
+    if (!silentLoop) {
+      silentLoop = new Audio(makeWav(0.5, 0));
+      silentLoop.loop = true;
+      silentLoop.setAttribute("playsinline", "");
+    }
+    if (silentLoop.paused) silentLoop.play().catch(function () {});
+  }
+  ["pointerdown", "keydown"].forEach(function (type) {
+    document.addEventListener(type, function () { keepSoundAwake(); getAudio(); }, true);
+  });
+
+  // ---------- Your own recorded fart ----------
+  var mySound = null;         // the recording, ready to play
+  var soundFacts = null;      // how long and how loud the recording is
+  var recorder = null;
+  var recordTimer = null;
+  var MAX_SECONDS = 3;
+
+  var recordBtn = document.getElementById("record");
+  var playBtn = document.getElementById("play");
+  var useBuiltInBtn = document.getElementById("useBuiltIn");
+  var recordStatus = document.getElementById("recordStatus");
+
+  function showSoundButtons() {
+    playBtn.hidden = !mySound;
+    useBuiltInBtn.hidden = !mySound;
+    recordBtn.textContent = mySound ? "🔴 Record again" : "🔴 Record";
+    recordStatus.textContent = mySound ? "Now playing: YOUR fart! 🎤💨" : "Now playing: surprise built-in farts 🎲";
+    if (soundFacts && soundFacts.loudest < 0.05) {
+      recordStatus.textContent = "Your fart is really quiet! Try recording again closer to the iPad. 🎤";
+    }
+    showSoundInfo();
+  }
+
+  function playMySound(speed) {
+    if (!soundOn || !mySound) return;
+    try {
+      var ctx = getAudio();
+      var src = ctx.createBufferSource();
+      src.buffer = mySound;
+      src.playbackRate.value = speed || 1;
+      src.connect(ctx.destination);
+      src.start();
+    } catch (e) {}
+  }
+
+  // Cut off the quiet bits at the start and end so the sound plays right away
+  function trimQuiet(buffer) {
+    var data = buffer.getChannelData(0);
+    var loudest = 0;
+    for (var i = 0; i < data.length; i++) loudest = Math.max(loudest, Math.abs(data[i]));
+    soundFacts = { recorded: buffer.duration, loudest: loudest };
+    var loud = Math.max(0.01, loudest * 0.1);   // "quiet" means under 1/10 of the loudest part
+    var start = 0, end = data.length - 1;
+    while (start < end && Math.abs(data[start]) < loud) start++;
+    while (end > start && Math.abs(data[end]) < loud) end--;
+    if (end - start < 100) return buffer;            // nothing loud, keep it all
+    start = Math.max(0, start - Math.floor(buffer.sampleRate * 0.01));
+    end = Math.min(data.length, end + Math.floor(buffer.sampleRate * 0.15));
+    var out = getAudio().createBuffer(buffer.numberOfChannels, end - start, buffer.sampleRate);
+    for (var c = 0; c < buffer.numberOfChannels; c++) {
+      out.getChannelData(c).set(buffer.getChannelData(c).subarray(start, end));
+    }
+    return out;
+  }
+
+  // Turn the saved recording into something we can play
+  function loadSound(arrayBuffer, done) {
+    getAudio().decodeAudioData(arrayBuffer, function (buffer) {
+      mySound = trimQuiet(buffer);
+      showSoundButtons();
+      if (done) done(true);
+    }, function () {
+      if (done) done(false);
+    });
+  }
+
+  function startRecording() {
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+      recordStatus.textContent = "Sorry, this browser can't record sounds 😢";
+      return;
+    }
+    getAudio();   // wake up the sound now, while the button is being tapped
+    micOn = true;
+    setAudioMode("play-and-record");
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      var pieces = [];
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = function (e) { if (e.data.size) pieces.push(e.data); };
+      recorder.onstop = function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });   // turn the mic off
+        micOn = false;
+        setAudioMode("playback");
+        recordBtn.classList.remove("recording");
+        var blob = new Blob(pieces, { type: recorder.mimeType });
+        recorder = null;
+        recordStatus.textContent = "Getting your fart ready...";
+        blob.arrayBuffer().then(function (bytes) {
+          loadSound(bytes.slice(0), function (ok) {
+            if (!ok) { recordStatus.textContent = "Hmm, that didn't work. Try again!"; return; }
+            // wait a moment for the iPad to switch from the mic back to the speaker
+            setTimeout(function () { playMySound(1); }, 400);
+            saveSound(blob);
+          });
+        });
+      };
+      recorder.start();
+      recordBtn.classList.add("recording");
+      recordBtn.textContent = "⏹️ Stop";
+      recordStatus.textContent = "Recording... make your best fart noise! 🎤";
+      recordTimer = setTimeout(stopRecording, MAX_SECONDS * 1000);
+    }).catch(function () {
+      micOn = false;
+      setAudioMode("playback");
+      recordStatus.textContent = "The iPad said no to the microphone. Open \"🔧 Sound not working?\" below (#4).";
+    });
+  }
+
+  function stopRecording() {
+    clearTimeout(recordTimer);
+    if (recorder && recorder.state === "recording") recorder.stop();
+  }
+
+  // Keep the recording on this iPad so it's still there next time
+  function saveSound(blob) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try { localStorage.setItem("fartSound", reader.result); } catch (e) {}
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  function loadSavedSound() {
+    var saved = null;
+    try { saved = localStorage.getItem("fartSound"); } catch (e) {}
+    if (!saved) return;
+    fetch(saved).then(function (r) { return r.arrayBuffer(); }).then(function (bytes) {
+      loadSound(bytes);
+    }).catch(function () {});
+  }
+
+  recordBtn.addEventListener("click", function () {
+    recordBtn.blur();   // so SPACE doesn't press this button
+    if (recorder) stopRecording();
+    else startRecording();
+  });
+
+  playBtn.addEventListener("click", function () {
+    playBtn.blur();
+    playMySound(1);
+  });
+
+  useBuiltInBtn.addEventListener("click", function () {
+    useBuiltInBtn.blur();
+    mySound = null;
+    soundFacts = null;
+    try { localStorage.removeItem("fartSound"); } catch (e) {}
+    showSoundButtons();
+    playFart();
+  });
+
+  // ---------- Sound helper ----------
+  var soundInfoEl = document.getElementById("soundInfo");
+  var testMineBtn = document.getElementById("testMine");
+
+  function showSoundInfo() {
+    var lines = [];
+    lines.push("🔊 Sound on this page: " + (soundOn ? "on" : "OFF (tap 🔇 Sound off at the top)"));
+    lines.push("⚙️ Sound engine: " + (!audio ? "not started yet (tap anywhere)" :
+      audio.state === "running" ? "running ✅" : audio.state + " (tap anywhere to wake it up)"));
+    lines.push("📱 Plays on Silent mode: " + (navigator.audioSession
+      ? (navigator.audioSession.type === "playback" ? "yes ✅" : "not yet (tap anywhere)")
+      : "using the backup trick for older iPads"));
+    if (soundFacts) {
+      var pct = Math.round(soundFacts.loudest * 100);
+      lines.push("🎤 Your fart: " + mySound.duration.toFixed(1) + " seconds, loudness " + pct + "%" +
+        (pct < 5 ? " (too quiet! record closer to the iPad)" : " ✅"));
+    } else {
+      lines.push("🎤 Your fart: none yet, using built-in farts");
+    }
+    soundInfoEl.innerHTML = "";
+    lines.forEach(function (t) {
+      var li = document.createElement("li");
+      li.textContent = t;
+      soundInfoEl.appendChild(li);
+    });
+    testMineBtn.hidden = !mySound;
+  }
+
+  var musicTest = null;
+  document.getElementById("testFart").addEventListener("click", function () {
+    this.blur();
+    var was = soundOn; soundOn = true;
+    playFart();
+    soundOn = was;
+    setTimeout(showSoundInfo, 100);
+  });
+  document.getElementById("testMusic").addEventListener("click", function () {
+    this.blur();
+    if (!musicTest) musicTest = new Audio(makeWav(0.6, 520));
+    musicTest.currentTime = 0;
+    musicTest.play().catch(function () {});
+    setTimeout(showSoundInfo, 100);
+  });
+  testMineBtn.addEventListener("click", function () {
+    this.blur();
+    var was = soundOn; soundOn = true;
+    playMySound(1);
+    soundOn = was;
+    setTimeout(showSoundInfo, 100);
+  });
+  document.getElementById("soundHelp").addEventListener("toggle", showSoundInfo);
+  showSoundInfo();
+  loadSavedSound();
+
+  // ---------- Makey Makey ----------
+  // The Makey Makey pretends to be a keyboard. When the foils touch, it "presses" SPACE.
+  // When the drawer opens, it lets go. (Arrow keys work too, in case a clip is on a different spot.)
+  var drawerKeys = [" ", "Spacebar", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+
+  document.addEventListener("keydown", function (event) {
+    if (drawerKeys.indexOf(event.key) === -1) return;
+    event.preventDefault();          // stop Space from scrolling the page
+    if (event.repeat) return;        // drawer staying closed doesn't keep farting
+    drawerClosed();
+  });
+
+  document.addEventListener("keyup", function (event) {
+    if (drawerKeys.indexOf(event.key) === -1) return;
+    event.preventDefault();
+    drawerOpened();
+  });
+
+  // Press and hold the drawer picture to test without the Makey Makey
+  boxEl.addEventListener("pointerdown", function (e) {
+    boxEl.setPointerCapture(e.pointerId);
+    drawerClosed();
+  });
+  boxEl.addEventListener("pointerup", drawerOpened);
+  boxEl.addEventListener("pointercancel", drawerOpened);
+
+  resetBtn.addEventListener("click", function () {
+    resetBtn.blur();   // so SPACE doesn't press this button
+    farts = 0;
+    showCount();
+    save();
+  });
+
+  soundBtn.addEventListener("click", function () {
+    soundOn = !soundOn;
+    soundBtn.textContent = soundOn ? "🔊 Sound on" : "🔇 Sound off";
+    soundBtn.blur();
+    showSoundInfo();
+    if (soundOn && mySound) playMySound(1);
+    else if (soundOn) playFart();
+  });
+</script>
+
+</body>
+</html>
